@@ -20,7 +20,8 @@ if not server_h or not access_token:
 # Function to check if a file path exists and if authentication settings work
 def check_filestore_path(path, headers):
     try:
-        response = requests.get(f"{url}/dbfs/get-status?path={path}", headers=headers)
+        response = requests.get(f"{url}/dbfs/get-status?path={path}", 
+                                headers=headers)
         response.raise_for_status()
         return response.json().get('path') is not None
     except requests.exceptions.RequestException as e:
@@ -30,7 +31,8 @@ def check_filestore_path(path, headers):
 # Test if the specified FILESTORE_PATH exists on Databricks
 def test_databricks():
     headers = {'Authorization': f'Bearer {access_token}'}
-    assert check_filestore_path(FILESTORE_PATH, headers), "Databricks filestore path check failed."
+    assert check_filestore_path(FILESTORE_PATH, headers)
+    "Databricks filestore path check failed."
 
 if __name__ == "__main__":
     test_databricks()
