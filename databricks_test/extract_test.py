@@ -6,7 +6,6 @@ import json
 import base64
 
 # Display the current DBFS contents
-display(dbutils.fs.ls('dbfs:/'))
 load_dotenv()
 server_h = os.getenv("SERVER_HOSTNAME")
 access_token = os.getenv("ACCESS_TOKEN")

@@ -6,7 +6,6 @@ import requests
 from dotenv import load_dotenv
 import os
 
-# Load environment variables
 load_dotenv()
 server_h = os.getenv("SERVER_HOSTNAME")
 access_token = os.getenv("ACCESS_TOKEN")
