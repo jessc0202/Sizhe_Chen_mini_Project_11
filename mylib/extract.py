@@ -72,7 +72,8 @@ def put_local_file(src_path, dbfs_path, overwrite, headers):
         print(f"File {dbfs_path} uploaded successfully.")
 
 
-def extract(local_path="/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/Sizhe_Chen_mini_Project_11/drinks.csv",
+def extract(local_path=("/Users/chensi/Desktop/MIDS/Fall 2024/" 
+                        "IDS 706/Sizhe_Chen_mini_Project_11/drinks.csv"),
             dbfs_path=FILESTORE_PATH + "/drinks.csv",
             directory=FILESTORE_PATH,
             overwrite=True):
