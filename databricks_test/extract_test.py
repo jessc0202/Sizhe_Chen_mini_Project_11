@@ -5,6 +5,10 @@ import os
 import json
 import base64
 
+spark = SparkSession.builder \
+    .appName("AlcoholConsumptionAnalysis") \
+    .getOrCreate()
+
 # Display the current DBFS contents
 load_dotenv()
 server_h = os.getenv("SERVER_HOSTNAME")
