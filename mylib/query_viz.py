@@ -28,7 +28,9 @@ def query_transform():
     query_result = spark.sql(query)
     return query_result
 
-def viz(file_path="/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/Sizhe_Chen_mini_Project_11/drinks.csv", save_path="./average_beer_servings_by_country.png"):
+def viz(file_path=("/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/"
+                   "Sizhe_Chen_mini_Project_11/drinks.csv"),
+         save_path="./average_beer_servings_by_country.png"):
     # Initialize Spark session
     spark = SparkSession.builder.appName("AlcoholConsumptionAnalysis").getOrCreate()
     
@@ -39,10 +41,6 @@ def viz(file_path="/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/Sizhe_Chen_mini_
     drinks_df.printSchema()
     drinks_df.show(5)
 
-    # Check if the required columns are present
-    if "country" not in drinks_df.columns or "beer_servings" not in drinks_df.columns:
-        raise ValueError("Required columns 'country' or 'beer_servings' not found in CSV file.")
-    
     # Register the DataFrame as a SQL temporary view
     drinks_df.createOrReplaceTempView("drinks")
     
@@ -59,7 +57,8 @@ def viz(file_path="/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/Sizhe_Chen_mini_
     
     # Plotting average beer servings by country
     plt.figure(figsize=(10, 6))
-    plt.bar(query_df['country'], query_df['avg_beer_servings'], color='skyblue')
+    plt.bar(query_df['country'], 
+            query_df['avg_beer_servings'], color='skyblue')
     plt.xlabel('Country')
     plt.ylabel('Average Beer Servings')
     plt.title('Average Beer Servings by Country')
