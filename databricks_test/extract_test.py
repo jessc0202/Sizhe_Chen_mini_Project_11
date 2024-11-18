@@ -15,7 +15,7 @@ access_token = os.getenv("ACCESS_TOKEN")
 
 # Define headers and URL for Databricks API
 headers = {'Authorization': f'Bearer {access_token}'}
-url = f"https://{server_h}/api/2.0"
+url = f"https://{os.getenv('SERVER_HOSTNAME')}/api/2.0"
 
 # Set DBFS path based on environment
 if os.getenv("RUN_ENV") == "databricks":
