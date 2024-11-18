@@ -10,7 +10,7 @@ file_path = (
     "Sizhe_Chen_mini_Project_11/drinks.csv"
 )
 drinks_df = spark.read.csv(file_path, header=True, inferSchema=True)
-drinks_df.createOrReplaceTempView("drinks")  # Register as a temporary table
+drinks_df.createOrReplaceTempView("drinks")  
 
 # Sample query
 def query_transform():
@@ -28,33 +28,44 @@ def query_transform():
     query_result = spark.sql(query)
     return query_result
 
-# Sample visualization function
-def viz(
-    save_path="/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/"
-              "Sizhe_Chen_mini_Project_11/average_beer_servings_by_country.png"
-):
-    query_result = query_transform()
-    df_surface_avg = query_result.toPandas()  
-
-    # Plot the bar chart with improved x-axis readability
-    plt.figure(figsize=(18, 8))  # Increase figure size for better spacing
-    plt.bar(
-        df_surface_avg["country"],
-        df_surface_avg["avg_beer_servings"],
-        color="skyblue"
-    )
-    plt.xlabel("Country")
-    plt.ylabel("Average Beer Servings")
-    plt.title("Average Beer Servings by Country")
-
-    plt.xticks(rotation=45, ha="right", fontsize=9)
-    plt.xticks(ticks=range(0, len(df_surface_avg), 5), 
-               labels=df_surface_avg["country"][::5])
-
-    plt.tight_layout()  # Adjust layout to prevent label cutoff
+def viz(file_path="/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/Sizhe_Chen_mini_Project_11/drinks.csv", save_path="./average_beer_servings_by_country.png"):
+    # Initialize Spark session
+    spark = SparkSession.builder.appName("AlcoholConsumptionAnalysis").getOrCreate()
     
-    # Save the figure
-    plt.savefig(save_path, format='png')
-    print(f"Visualization saved as '{save_path}'")
+    # Read the CSV file
+    drinks_df = spark.read.csv(file_path, header=True, inferSchema=True)
+    
+    # Debugging: Print schema and show data
+    drinks_df.printSchema()
+    drinks_df.show(5)
 
-viz()
+    # Check if the required columns are present
+    if "country" not in drinks_df.columns or "beer_servings" not in drinks_df.columns:
+        raise ValueError("Required columns 'country' or 'beer_servings' not found in CSV file.")
+    
+    # Register the DataFrame as a SQL temporary view
+    drinks_df.createOrReplaceTempView("drinks")
+    
+    # Run the query to calculate average beer servings by country
+    query_result = spark.sql("""
+        SELECT country, AVG(beer_servings) AS avg_beer_servings
+        FROM drinks
+        GROUP BY country
+        ORDER BY avg_beer_servings DESC
+    """)
+    
+    # Convert query result to Pandas for plotting
+    query_df = query_result.toPandas()
+    
+    # Plotting average beer servings by country
+    plt.figure(figsize=(10, 6))
+    plt.bar(query_df['country'], query_df['avg_beer_servings'], color='skyblue')
+    plt.xlabel('Country')
+    plt.ylabel('Average Beer Servings')
+    plt.title('Average Beer Servings by Country')
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    
+    # Save the plot
+    plt.savefig(save_path)
+    print(f"Visualization saved as '{save_path}'")
