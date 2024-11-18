@@ -1,5 +1,5 @@
 import os
-from mylib.query_viz import viz  # Import the visualization function
+from mylib.query_viz import viz  
 
 def test_viz():
     # Assuming `viz` saves a file, check if the file is created

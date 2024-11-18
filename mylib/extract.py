@@ -1,97 +1,103 @@
 import requests
-from dotenv import load_dotenv
 import os
-import json
 import base64
+from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
-server_h = os.getenv("SERVER_HOSTNAME")
-access_token = os.getenv("ACCESS_TOKEN")
-FILESTORE_PATH = "dbfs:/FileStore/mini_project11"
+server_h = os.getenv("SERVER_HOSTNAME")  # Databricks server hostname
+access_token = os.getenv("ACCESS_TOKEN")  # Databricks access token
+url = f"https://{server_h}/api/2.0"  # Databricks API base URL
 headers = {'Authorization': f'Bearer {access_token}'}
-url = f"https://{server_h}/api/2.0"
 
+def perform_query(path, data=None):
+    """Function to make a POST request to the Databricks API.
+    
+    Args:
+        path (str): API endpoint path.
+        data (dict): Data to be sent in the request.
 
-def perform_query(path, headers, data=None):
-    """Performs a POST request to the Databricks API."""
-    if data is None:
-        data = {}
+    Returns:
+        dict: JSON response from the API.
+    """
     session = requests.Session()
-    response = session.post(url + path, 
-                            data=json.dumps(data), 
-                            headers=headers, 
-                            verify=True)
-    response.raise_for_status()  # Raises an exception for HTTP errors
+    response = session.post(url + path, json=data, headers=headers)
+    response.raise_for_status()  # Raise an exception for HTTP errors
     return response.json()
 
-
-def mkdirs(path, headers):
-    """Create a directory in DBFS if it does not exist."""
-    data = {'path': path}
-    return perform_query('/dbfs/mkdirs', headers=headers, data=data)
-
-
-def create(path, overwrite, headers):
-    """Create a handle for uploading a file to DBFS."""
-    data = {'path': path, 'overwrite': overwrite}
-    return perform_query('/dbfs/create', headers=headers, data=data)
-
-
-def add_block(handle, data, headers):
-    """Add a block of data to a DBFS file handle."""
-    data_payload = {'handle': handle, 'data': data}
-    return perform_query('/dbfs/add-block', headers=headers, data=data_payload)
-
-
-def close(handle, headers):
-    """Close a DBFS file handle after uploading."""
-    data = {'handle': handle}
-    return perform_query('/dbfs/close', headers=headers, data=data)
-
-
-def put_local_file(src_path, dbfs_path, overwrite, headers):
+def mkdirs(dbfs_path):
+    """Create a directory in DBFS.
+    
+    Args:
+        dbfs_path (str): Path of the directory in DBFS.
     """
-    Upload a local file to Databricks DBFS by reading in chunks.
-    :param src_path: Local path of the file to upload
-    :param dbfs_path: Destination path in DBFS
-    :param overwrite: Boolean indicating if the file should be overwritten
-    :param headers: Authorization headers for the request
+    response = perform_query('/dbfs/mkdirs', data={'path': dbfs_path})
+    print(f"Directory created: {dbfs_path}")
+    return response
+
+def create_file(dbfs_path, overwrite=True):
+    """Open a handle to create a new file in DBFS.
+    
+    Args:
+        dbfs_path (str): Path where the file will be created.
+        overwrite (bool): Whether to overwrite the file if it exists.
+
+    Returns:
+        int: File handle used to write data.
     """
-    with open(src_path, 'rb') as local_file:
-        content = local_file.read()
-        handle = create(dbfs_path, overwrite, headers=headers)['handle']
-        print(f"Uploading file to {dbfs_path}...")
+    response = perform_query('/dbfs/create', 
+                             data={'path': dbfs_path, 'overwrite': overwrite})
+    print(f"File created at path: {dbfs_path}")
+    return response['handle']
 
-        # Upload file in chunks of 1 MB
-        for i in range(0, len(content), 2**20):
-            chunk = base64.standard_b64encode(content[i:i+2**20]).decode()
-            add_block(handle, chunk, headers=headers)
-        
-        close(handle, headers=headers)
-        print(f"File {dbfs_path} uploaded successfully.")
-
-
-def extract(local_path=("/Users/chensi/Desktop/MIDS/Fall 2024/" 
-                        "IDS 706/Sizhe_Chen_mini_Project_11/drinks.csv"),
-            dbfs_path=FILESTORE_PATH + "/drinks.csv",
-            directory=FILESTORE_PATH,
-            overwrite=True):
+def add_block(handle, data_chunk):
+    """Add a block of data to an open file handle.
+    
+    Args:
+        handle (int): File handle returned by create_file.
+        data_chunk (bytes): Data chunk to be written, in bytes format.
     """
-    Extracts a local file and uploads it to Databricks DBFS.
-    :param local_path: Local path of the file to upload
-    :param dbfs_path: Destination path in DBFS
-    :param directory: DBFS directory path
-    :param overwrite: Boolean indicating if the file should be overwritten
+    encoded_data = base64.standard_b64encode(data_chunk).decode('utf-8')
+    perform_query('/dbfs/add-block', data={'handle': handle, 'data': encoded_data})
+    print("Added a block of data.")
+
+def close_file(handle):
+    """Close the file handle in DBFS, finalizing the upload.
+    
+    Args:
+        handle (int): File handle to close.
+    """
+    perform_query('/dbfs/close', data={'handle': handle})
+    print("File upload complete, and handle closed.")
+
+def upload_file(local_path, dbfs_path, overwrite=True):
+    """Upload a local file to Databricks DBFS in chunks.
+    
+    Args:
+        local_path (str): Path to the local file to upload.
+        dbfs_path (str): Destination path in DBFS.
+        overwrite (bool): Whether to overwrite the file if it exists.
     """
     # Ensure the directory exists in DBFS
-    mkdirs(path=directory, headers=headers)
+    dbfs_dir = os.path.dirname(dbfs_path)
+    mkdirs(dbfs_dir)
 
-    # Upload the local file to DBFS
-    put_local_file(local_path, dbfs_path, overwrite, headers=headers)
+    # Open a handle to write to DBFS
+    handle = create_file(dbfs_path, overwrite)
 
-    return dbfs_path
+    # Read the file and upload it in chunks of 1 MB
+    with open(local_path, 'rb') as f:
+        while chunk := f.read(1 * 1024 * 1024):  # Read 1 MB chunks
+            add_block(handle, chunk)
 
+    # Close the file handle to complete the upload
+    close_file(handle)
+    print(f"File '{local_path}' successfully uploaded to '{dbfs_path}'.")
 
 if __name__ == "__main__":
-    extract()
+    local_file_path = (
+        "/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/"
+        "Sizhe_Chen_mini_Project_11/drinks.csv"
+    )
+    dbfs_file_path = "dbfs:/FileStore/mini_project11/drink.csv"
+    upload_file(local_file_path, dbfs_file_path)
