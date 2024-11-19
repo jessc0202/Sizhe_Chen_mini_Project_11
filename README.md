@@ -43,7 +43,7 @@ The Data Extraction and Transformation Pipeline project retrieves and processes 
 ## Job Run from Automated Trigger
 The pipeline is automatically triggered when a push to GitHub is detected. This triggers the pipeline to execute the extraction, transformation, and visualization tasks on Databricks.
 
-![Sample Databricks Pipeline Job](https://github.com/SizheChen/Sizhe_Chen_mini_Project_11/assets/your_image_url_here)
+![Sample Databricks Pipeline Job](data_pipeline.png)
 
 ## Check format and test errors
 1. Open Codespaces or run the repository locally with the terminal open.
@@ -52,10 +52,10 @@ The pipeline is automatically triggered when a push to GitHub is detected. This 
 
 ## Sample Visualizations from Query:
 
-Below are example visualizations generated from the transformed query data.
+Below are example visualization generated from the transformed query data.
 
-![Visualization 1](server.png)
-![Visualization 2](surface.png)
+![Visualization 1](plot.png)
+
 
 ## References
 1. https://github.com/nogibjj/python-ruff-template
