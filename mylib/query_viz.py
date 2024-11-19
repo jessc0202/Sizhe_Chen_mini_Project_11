@@ -5,11 +5,8 @@ from pyspark.sql import SparkSession
 spark = SparkSession.builder.appName("Query Visualization").getOrCreate()
 
 # Load your dataset into a Spark DataFrame and register it as a table
-file_path = (
-    "/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/"
-    "Sizhe_Chen_mini_Project_11/drinks.csv"
-)
-drinks_df = spark.read.csv(file_path, header=True, inferSchema=True)
+dbfs_file_path = "dbfs:/FileStore/mini_project11/drinks.csv"
+drinks_df = spark.read.csv(dbfs_file_path, header=True, inferSchema=True)
 drinks_df.createOrReplaceTempView("drinks")  
 
 # Sample query
