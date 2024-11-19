@@ -82,6 +82,17 @@ def upload_file(local_path, dbfs_path, overwrite=True):
     dbfs_dir = os.path.dirname(dbfs_path)
     mkdirs(dbfs_dir)
 
+    # Check if the local file exists
+    if not os.path.exists(local_path):
+        print(f"Error: File not found at {local_path}")
+        # Print the contents of the directory for debugging
+        dir_path = os.path.dirname(local_path)
+        if os.path.exists(dir_path):
+            print(f"Contents of directory '{dir_path}': {os.listdir(dir_path)}")
+        return
+    else:
+        print(f"Success: File found at {local_path}")
+
     # Open a handle to write to DBFS
     handle = create_file(dbfs_path, overwrite)
 
@@ -95,9 +106,20 @@ def upload_file(local_path, dbfs_path, overwrite=True):
     print(f"File '{local_path}' successfully uploaded to '{dbfs_path}'.")
 
 if __name__ == "__main__":
-    local_file_path = (
-        "/Users/chensi/Desktop/MIDS/Fall 2024/IDS 706/"
-        "Sizhe_Chen_mini_Project_11/drinks.csv"
-    )
+    base_path = ("/Users/chensi/Desktop/MIDS/Fall 2024/"
+                 "IDS 706/Sizhe_Chen_mini_Project_11")
+    file_name = "drinks.csv"
+    local_file_path = os.path.join(base_path, file_name)
+
+    # Debugging to check if the file exists
+    if not os.path.exists(local_file_path):
+        print(f"Error: File not found at {local_file_path}")
+        # Print the contents of the directory for debugging
+        dir_path = os.path.dirname(local_file_path)
+        if os.path.exists(dir_path):
+            print(f"Contents of directory '{dir_path}': {os.listdir(dir_path)}")
+    else:
+        print(f"Success: File found at {local_file_path}")
+
     dbfs_file_path = "dbfs:/FileStore/mini_project11/drink.csv"
     upload_file(local_file_path, dbfs_file_path)
