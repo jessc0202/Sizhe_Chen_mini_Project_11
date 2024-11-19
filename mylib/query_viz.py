@@ -4,10 +4,9 @@ from pyspark.sql import SparkSession
 # Initialize Spark session
 spark = SparkSession.builder.appName("Query Visualization").getOrCreate()
 
-# Load your dataset into a Spark DataFrame and register it as a table
-dbfs_file_path = "dbfs:/FileStore/mini_project11/drinks.csv"
-drinks_df = spark.read.csv(dbfs_file_path, header=True, inferSchema=True)
-drinks_df.createOrReplaceTempView("drinks")  
+# Load data from the Delta table
+drinks_df = spark.sql("SELECT * FROM drinks_delta")
+drinks_df.createOrReplaceTempView("drinks")
 
 # Sample query
 def query_transform():
